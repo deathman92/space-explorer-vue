@@ -14,14 +14,17 @@ module.exports = {
   rules: {
     "no-console": "off",
     "no-debugger": "off",
-    "graphql/template-strings": [
-      "error",
-      {
-        env: "literal",
-        projectName: "app",
-        schemaJsonFilepath: "node_modules/.temp/graphql/schema.json"
-      }
-    ]
+    "graphql/template-strings":
+      process.env.NODE_ENV === "production"
+        ? "off"
+        : [
+            "error",
+            {
+              env: "literal",
+              projectName: "app",
+              schemaJsonFilepath: "node_modules/.temp/graphql/schema.json"
+            }
+          ]
   },
 
   overrides: [

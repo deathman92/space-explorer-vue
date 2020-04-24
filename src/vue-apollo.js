@@ -4,6 +4,8 @@ import {
   createApolloClient,
   restartWebsockets
 } from "vue-cli-plugin-apollo/graphql-client";
+import gql from "graphql-tag";
+import GetCartItems from "./graphql/GetCartItems.graphql";
 
 // Install the vue plugin
 Vue.use(VueApollo);
@@ -21,7 +23,7 @@ const defaultOptions = {
   httpEndpoint,
   // You can use `wss` for secure connection (recommended in production)
   // Use `null` to disable subscriptions
-  wsEndpoint: process.env.VUE_APP_GRAPHQL_WS || "ws://localhost:4000/graphql",
+  wsEndpoint: null,
   // LocalStorage token
   tokenName: AUTH_TOKEN,
   // Enable Automatic Query persisting with Apollo Engine
@@ -30,7 +32,7 @@ const defaultOptions = {
   // You need to pass a `wsEndpoint` for this to work
   websocketsOnly: false,
   // Is being rendered on the server?
-  ssr: false
+  ssr: false,
 
   // Override default apollo link
   // note: don't override httpLink here, specify httpLink options in the
@@ -41,13 +43,58 @@ const defaultOptions = {
   // cache: myCache
 
   // Override the way the Authorization header is set
-  // getAuth: (tokenName) => ...
+  getAuth: tokenName => {
+    // get the authentication token from local storage if it exists
+    const token = localStorage.getItem(tokenName);
+    // return the headers to the context so httpLink can read them
+    return token ? token : "";
+  },
 
   // Additional ApolloClient options
   // apollo: { ... }
 
   // Client local data (see apollo-link-state)
-  // clientState: { resolvers: { ... }, defaults: { ... } }
+  typeDefs: gql`
+    extend type Query {
+      isLoggedIn: Boolean!
+      cartItems: [ID!]!
+    }
+
+    extend type Launch {
+      isInCart: Boolean!
+    }
+
+    extend type Mutation {
+      addOrRemoveFromCart(id: ID!): [ID!]!
+    }
+  `,
+  resolvers: {
+    Launch: {
+      isInCart: (launch, _, { cache }) => {
+        const queryResult = cache.readQuery({ query: GetCartItems });
+        if (queryResult) {
+          return queryResult.cartItems.includes(launch.id);
+        }
+        return false;
+      }
+    },
+    Mutation: {
+      addOrRemoveFromCart: (_, { id }, { cache }) => {
+        const queryResult = cache.readQuery({ query: GetCartItems });
+        if (queryResult) {
+          const { cartItems } = queryResult;
+          const data = {
+            cartItems: cartItems.includes(id)
+              ? cartItems.filter(i => i !== id)
+              : [...cartItems, id]
+          };
+          cache.writeQuery({ query: GetCartItems, data });
+          return data.cartItems;
+        }
+        return [];
+      }
+    }
+  }
 };
 
 // Call this in the Vue app file
@@ -59,8 +106,10 @@ export function createProvider(options = {}) {
   });
   apolloClient.wsClient = wsClient;
 
+  apolloClient.writeData({ data: { isLoggedIn: !!getToken(), cartItems: [] } });
+
   // Create vue apollo provider
-  const apolloProvider = new VueApollo({
+  return new VueApollo({
     defaultClient: apolloClient,
     defaultOptions: {
       $query: {
@@ -76,8 +125,13 @@ export function createProvider(options = {}) {
       );
     }
   });
+}
 
-  return apolloProvider;
+export function getToken() {
+  if (typeof localStorage !== "undefined") {
+    return localStorage.getItem(AUTH_TOKEN);
+  }
+  return null;
 }
 
 // Manually call this when user log in
@@ -88,6 +142,7 @@ export async function onLogin(apolloClient, token) {
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient);
   try {
     await apolloClient.resetStore();
+    await apolloClient.writeData({ data: { isLoggedIn: true } });
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log("%cError on cache reset (login)", "color: orange;", e.message);
@@ -102,6 +157,7 @@ export async function onLogout(apolloClient) {
   if (apolloClient.wsClient) restartWebsockets(apolloClient.wsClient);
   try {
     await apolloClient.resetStore();
+    await apolloClient.writeData({ data: { isLoggedIn: false } });
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log("%cError on cache reset (logout)", "color: orange;", e.message);

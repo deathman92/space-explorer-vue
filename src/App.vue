@@ -1,32 +1,53 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
+    <template v-if="isLoggedIn">
+      <div class="bar"></div>
+      <div class="container">
+        <router-view />
+      </div>
+      <TheFooter />
+    </template>
+    <Login v-else />
   </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import IsLoggedIn from "@/graphql/IsLoggedIn.graphql";
+import TheFooter from "@/components/TheFooter";
+import Login from "@/views/Login";
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+export default {
+  components: { Login, TheFooter },
+  data() {
+    return {
+      isLoggedIn: false
+    };
+  },
+  apollo: {
+    isLoggedIn: {
+      query: IsLoggedIn
     }
   }
+};
+</script>
+
+<style lang="scss" scoped>
+@import "./styles/variables";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: #{$unit * 3}px;
+  padding-bottom: #{$unit * 5}px;
+}
+
+.bar {
+  flex-shrink: 0;
+  height: 12px;
+  background-color: $color-primary;
 }
 </style>

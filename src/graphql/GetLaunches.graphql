@@ -1,0 +1,11 @@
+#import "./LaunchTileData.graphql"
+
+query GetLaunchesList($after: String) {
+    launches(after: $after) {
+        cursor
+        hasMore
+        launches {
+            ...LaunchTile
+        }
+    }
+}
