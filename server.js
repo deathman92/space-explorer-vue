@@ -1,5 +1,5 @@
-import express from "express";
-import path from "path";
+const express = require("express");
+const path = require("path");
 
 const staticPath = path.resolve(__dirname, "../dist");
 
