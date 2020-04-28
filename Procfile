@@ -1,1 +1,1 @@
-web: yarn apollo:start --mode production --port $PORT
+web: node server.js
