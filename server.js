@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 
-const staticPath = path.resolve(__dirname, "../dist");
+const staticPath = path.resolve(__dirname, "/dist");
 
 const app = express();
 
