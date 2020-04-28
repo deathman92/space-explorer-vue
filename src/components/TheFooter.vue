@@ -35,6 +35,7 @@ export default {
   methods: {
     onLogout() {
       onLogout(this.$apollo.getClient());
+      this.$router.push("/");
     }
   }
 };

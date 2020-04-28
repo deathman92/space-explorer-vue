@@ -1,4 +1,4 @@
-import { Sequelize } from "sequelize";
+import { Sequelize, DataTypes } from "sequelize";
 
 export const paginateResults = ({
   after: cursor,
@@ -35,17 +35,17 @@ const createStore = () => {
   });
 
   const users = db.define("user", {
-    createdAt: Sequelize.DATE,
-    updatedAt: Sequelize.DATE,
-    email: Sequelize.STRING,
-    token: Sequelize.STRING
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    email: DataTypes.STRING,
+    token: DataTypes.STRING
   });
 
   const trips = db.define("trip", {
-    createdAt: Sequelize.DATE,
-    updatedAt: Sequelize.DATE,
-    launchId: Sequelize.INTEGER,
-    userId: Sequelize.INTEGER
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    launchId: DataTypes.INTEGER,
+    userId: DataTypes.INTEGER
   });
 
   return { db, users, trips };

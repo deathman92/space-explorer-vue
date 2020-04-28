@@ -7,7 +7,6 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "start": "vue-cli-service apollo:start --mode production --port $PORT",
     "apollo": "vue-cli-service apollo:dev --generate-schema",
     "apollo:schema:generate": "vue-cli-service apollo:schema:generate",
     "apollo:schema:publish": "vue-cli-service apollo:schema:publish",
